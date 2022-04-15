@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path</title>
+    <!-- Tailwind Css -->
+    <script src="tailwind.js"></script>
+   
+    <style>
+        
+    </style>
+</head>
+<body class="bg-gray-200 w-full h-full flex-auto">
+    <!-- Tailwind Body -->
+    <div class="m-auto w-full max-w-7xl px-2 py-2">
+        <div class="product grid grid-cols-1 gap-2  lg:grid-cols-3 sm:grid-cols-2 sm:gap-2 " >
+
+        </div>
+    </div>
+
+    <!-- AJAX GET CALL -->
+    <script src="jquery-3.6.0.min.js"></script>
+    <script>
+        var data = [];
+        var list = [];
+        function fetch()
+        {
+            $.ajax({
+                url: "https://www.cheapshark.com/api/1.0/games?title=batman&limit=60&exact=0",
+                type:"GET",
+                dataType: "JSON",
+                success: function(result){
+                    data.push(result);
+                    getDataPrice();
+                }
+            });
+           
+        }
+		
+		function getDataPrice()
+        {
+            $.each( data[0], function( key, value ) {
+                
+                
+                $.ajax({
+                    url:"https://www.cheapshark.com/api/1.0/deals?id="+value.cheapestDealID,
+                    type:"GET",
+                    success:function(result)
+                    {   
+
+                        value['salePrice'] = result.gameInfo.salePrice;
+                        value['retailPrice'] = result.gameInfo.retailPrice;
+                        writePage(value);
+                       
+                    }   
+                  });
+            });
+ 			
+           
+        }
+
+       
+        function writePage(value)
+        {   
+            /* % CALC */
+            var ort = "";
+          
+            if( value.salePrice != value.retailPrice ) {
+              
+                var subtractPrice = Math.abs(value.retailPrice - value.salePrice);
+                var dividePrice = Math.abs(subtractPrice / value.retailPrice);
+                var multiplyPrice = Math.abs(dividePrice * 100);
+                
+                ort = multiplyPrice.toFixed(0);
+              
+               
+            };
+            /* Return Product */
+            var html = `
+                    <div class=" rounded-2xl border shadow-md  bg-white relative overflow-hidden ">
+                        <div class="absolute right-0 top-0 py-4 px-5">
+                            <span class="w-full rounded-xl h-7  text-sm text-red-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" class="fill-current text-red-500"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
+                            </span>   
+                        </div>
+                        <div class="w-full h-40 overflow-hidden max-h-40 h-40">
+                            <img class="w-full object-cover  h-full " src="${value.thumb}" alt="">
+                        </div>
+                        <div class="px-4 py-3">
+                            <h1 class="font-bold text-slate-900 text-base leading-5 py-2">${value.external}</h1>
+                            <p class="text-gray-500 text-sm py-1">${value.internalName}</p>
+                        </div>
+                        <div class="game-product-price">
+                            <div class="game-card-price px-4 py-3 flex items-center">
+                                <span class="calc px-2 py-1 text-white text-sm rounded-full bg-red-400 text-white-400 mr-3 ${ort != "" ? 'calc' : 'hidden'}">%${ort}</span>
+                                <span class=" line-through"> ${value.salePrice != value.retailPrice ? "&euro;"+value.retailPrice : "" } </span>
+                                <span class="px-2 font-bold">&euro;${value.salePrice}</span>
+                                <button class="ml-auto px-3 py-2 text-white text-sm bg-green-500 rounded-lg"> İncele </button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+
+                    $('.product').append(html);
+        }
+		
+        fetch();
+    
+    </script>
+</body>
+</html>
